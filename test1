@@ -1,0 +1,1398 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Shield, 
+  AlertTriangle, 
+  Activity, 
+  Users, 
+  Search, 
+  Settings, 
+  MessageSquare, 
+  Database,
+  Scan,
+  Bug,
+  Brain,
+  Play,
+  FileSearch,
+  TrendingUp,
+  Sun,
+  Moon,
+  Download,
+  Filter,
+  Wifi,
+  WifiOff,
+  Globe,
+  Target,
+  Clock,
+  CheckCircle2,
+  BarChart3,
+  Upload,
+  FileText,
+  Loader2,
+  Send,
+  Bot,
+  X,
+  RefreshCw,
+  Network,
+  Server,
+  Hash,
+  MapPin,
+  Plus,
+  Eye,
+  Trash2,
+  XCircle,
+  Minimize2,
+  Maximize2
+} from 'lucide-react';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+
+// Hovering Chat Box Component
+const HoveringChatBox = ({
+  isOpen,
+  onToggle,
+  messages,
+  currentMessage,
+  setCurrentMessage,
+  onSendMessage
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 w-96 bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 h-96 transition-all z-50">
+      <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center space-x-2">
+          <Bot className="text-blue-400" size={20} />
+          <span className="text-white font-medium">AI Security Assistant</span>
+        </div>
+        <button
+          onClick={onToggle}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          <X size={16} />
+        </button>
+      </div>
+      <div className="flex-1 p-4 overflow-y-auto max-h-64">
+        <div className="space-y-4">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex ${
+                msg.type === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div
+                className={`max-w-xs px-4 py-2 rounded-lg ${
+                  msg.type === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-white'
+                }`}
+              >
+                <p className="text-sm">{msg.message}</p>
+                <p className="text-xs opacity-70 mt-1">
+                  {msg.timestamp.toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="p-4 border-t border-gray-700">
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            placeholder="Ask about threats, vulnerabilities..."
+            value={currentMessage}
+            onChange={(e) => setCurrentMessage(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && onSendMessage()}
+            className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-400 outline-none text-sm"
+          />
+          <button
+            onClick={onSendMessage}
+            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+          >
+            <Send size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+const SentinelNexusDashboard = () => {
+  const [isDark, setIsDark] = useState(true);
+  const [activeModule, setActiveModule] = useState('dashboard');
+  const [selectedAlert, setSelectedAlert] = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [floatingChat, setFloatingChat] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [scanResults, setScanResults] = useState([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [malwareResults, setMalwareResults] = useState([]);
+  const [chatMessages, setChatMessages] = useState([
+    { id: 1, type: 'ai', message: 'Hello! I\'m your AI security assistant. How can I help you today?', timestamp: new Date() }
+  ]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [chatMinimized, setChatMinimized] = useState(false);
+  const [hoveringChatOpen, setHoveringChatOpen] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const alerts = [
+    { 
+      id: 1, 
+      type: 'critical', 
+      title: 'Advanced Persistent Threat Detected', 
+      source: 'ThreatIntel', 
+      time: '2 min ago', 
+      details: 'Suspicious lateral movement detected from IP 192.168.1.45. Potential APT group "Lazarus" indicators found.',
+      location: 'Server Room A - DC01',
+      affected_systems: 3,
+      confidence: 95
+    },
+    { 
+      id: 2, 
+      type: 'high', 
+      title: 'Ransomware Signature Match', 
+      source: 'MalwareAgent', 
+      time: '5 min ago', 
+      details: 'File encryption patterns consistent with REvil ransomware detected on endpoint DESK-001.',
+      location: 'Finance Department',
+      affected_systems: 1,
+      confidence: 88
+    },
+    { 
+      id: 3, 
+      type: 'medium', 
+      title: 'Zero-Day Vulnerability', 
+      source: 'VulnScanner', 
+      time: '12 min ago', 
+      details: 'CVE-2024-8901 - Remote code execution vulnerability in Apache Tomcat versions 9.0.x',
+      location: 'Web Server Farm',
+      affected_systems: 12,
+      confidence: 92
+    },
+    { 
+      id: 4, 
+      type: 'low', 
+      title: 'Unusual Login Pattern', 
+      source: 'ResponseAgent', 
+      time: '18 min ago', 
+      details: 'Multiple failed login attempts from unusual geographic location (Russia) for user john.doe@company.com',
+      location: 'Identity Provider',
+      affected_systems: 1,
+      confidence: 65
+    }
+  ];
+
+  const threatData = [
+    { time: '00:00', threats: 12, blocked: 10, allowed: 2, malware: 5, phishing: 3, ddos: 2 },
+    { time: '04:00', threats: 19, blocked: 16, allowed: 3, malware: 8, phishing: 5, ddos: 3 },
+    { time: '08:00', threats: 35, blocked: 28, allowed: 7, malware: 15, phishing: 8, ddos: 5 },
+    { time: '12:00', threats: 45, blocked: 41, allowed: 4, malware: 20, phishing: 12, ddos: 8 },
+    { time: '16:00', threats: 52, blocked: 48, allowed: 4, malware: 22, phishing: 15, ddos: 6 },
+    { time: '20:00', threats: 38, blocked: 35, allowed: 3, malware: 18, phishing: 10, ddos: 4 }
+  ];
+
+  const vulnData = [
+    { severity: 'Critical', count: 8, color: '#ef4444' },
+    { severity: 'High', count: 23, color: '#f97316' },
+    { severity: 'Medium', count: 45, color: '#eab308' },
+    { severity: 'Low', count: 67, color: '#22c55e' }
+  ];
+
+  const detailedVulns = [
+    {
+      id: 'CVE-2024-8901',
+      title: 'Apache Tomcat Remote Code Execution',
+      severity: 'Critical',
+      cvss: 9.8,
+      description: 'A critical vulnerability allowing remote code execution through malformed HTTP requests',
+      affected_systems: ['web-server-01', 'web-server-02', 'api-gateway'],
+      patch_available: true,
+      exploit_available: true,
+      discovery_date: '2024-01-15'
+    },
+    {
+      id: 'CVE-2024-8902',
+      title: 'OpenSSL Buffer Overflow',
+      severity: 'High',
+      cvss: 7.5,
+      description: 'Buffer overflow vulnerability in SSL/TLS handshake processing',
+      affected_systems: ['mail-server', 'vpn-gateway', 'load-balancer'],
+      patch_available: true,
+      exploit_available: false,
+      discovery_date: '2024-01-10'
+    }
+  ];
+
+  const agentStatus = [
+    { name: 'VulnScanner', status: 'online', lastScan: '2 min ago', threats: 23, cpu: 45, memory: 68 },
+    { name: 'MalwareAgent', status: 'online', lastScan: '1 min ago', threats: 5, cpu: 32, memory: 54 },
+    { name: 'ThreatIntel', status: 'online', lastScan: '30 sec ago', threats: 12, cpu: 28, memory: 41 },
+    { name: 'ResponseAgent', status: 'online', lastScan: '1 min ago', threats: 3, cpu: 18, memory: 35 },
+    { name: 'ForensicAgent', status: 'maintenance', lastScan: '15 min ago', threats: 0, cpu: 0, memory: 12 },
+    { name: 'ForecastingAgent', status: 'online', lastScan: '5 min ago', threats: 8, cpu: 75, memory: 82 }
+  ];
+
+  const forecastData = [
+    { category: 'Malware', current: 85, predicted: 92 },
+    { category: 'Phishing', current: 65, predicted: 71 },
+    { category: 'DDoS', current: 45, predicted: 38 },
+    { category: 'Insider Threat', current: 25, predicted: 30 },
+    { category: 'APT', current: 15, predicted: 22 },
+    { category: 'Ransomware', current: 35, predicted: 42 }
+  ];
+
+  const knowledgeBase = [
+    { id: 1, type: 'IOC', title: 'Lazarus APT Group IOCs', entries: 1247, lastUpdate: '2 hours ago' },
+    { id: 2, type: 'Signatures', title: 'Malware Signatures DB', entries: 8934, lastUpdate: '15 min ago' },
+    { id: 3, type: 'CVE', title: 'Vulnerability Database', entries: 2341, lastUpdate: '1 hour ago' },
+    { id: 4, type: 'TTP', title: 'Tactics, Techniques & Procedures', entries: 567, lastUpdate: '3 hours ago' }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getAlertColor = (type) => {
+    const colors = {
+      critical: 'border-red-500 bg-red-500/10',
+      high: 'border-orange-500 bg-orange-500/10',
+      medium: 'border-yellow-500 bg-yellow-500/10',
+      low: 'border-blue-500 bg-blue-500/10'
+    };
+    return colors[type] || colors.low;
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      online: 'text-green-400',
+      offline: 'text-red-400',
+      maintenance: 'text-yellow-400'
+    };
+    return colors[status] || colors.offline;
+  };
+
+  const handleVulnSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsScanning(true);
+    
+    setTimeout(() => {
+      const mockResults = [
+        {
+          ip: searchQuery,
+          vulnerabilities: [
+            { cve: 'CVE-2024-8901', severity: 'Critical', port: 8080, service: 'Apache Tomcat' },
+            { cve: 'CVE-2024-8902', severity: 'High', port: 443, service: 'OpenSSL' }
+          ],
+          open_ports: [22, 80, 443, 8080],
+          os: 'Ubuntu 20.04 LTS',
+          last_scan: new Date().toLocaleString()
+        }
+      ];
+      setScanResults(mockResults);
+      setIsScanning(false);
+    }, 2000);
+  };
+
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files);
+    const newFiles = files.map(file => ({
+      id: Date.now() + Math.random(),
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      status: 'scanning',
+      uploadTime: new Date()
+    }));
+    
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+    
+    newFiles.forEach(file => {
+      setTimeout(() => {
+        const isMalicious = Math.random() > 0.7;
+        const result = {
+          ...file,
+          status: isMalicious ? 'infected' : 'clean',
+          threat: isMalicious ? 'Trojan.Win32.Agent' : null,
+          scanTime: new Date()
+        };
+        
+        setMalwareResults(prev => [...prev, result]);
+        setUploadedFiles(prev => prev.map(f => f.id === file.id ? result : f));
+      }, Math.random() * 3000 + 1000);
+    });
+  };
+
+  // Updated handleChatMessage function
+const handleChatMessage = () => {
+  if (!currentMessage.trim()) return;
+  
+  const userMessage = {
+    id: Date.now(),
+    type: 'user',
+    message: currentMessage,
+    timestamp: new Date()
+  };
+  
+  setChatMessages(prev => [...prev, userMessage]);
+  setCurrentMessage('');
+  
+  // Simulate AI response
+  setTimeout(() => {
+    let aiResponse = '';
+    
+    if (currentMessage.toLowerCase().includes('scan') || currentMessage.toLowerCase().includes('vulnerability')) {
+      aiResponse = `Based on the latest ${activeModule} scan, I found ${scanResults.length > 0 ? scanResults[0].vulnerabilities.length : 'several'} vulnerabilities. Would you like me to prioritize them by severity?`;
+    } else if (currentMessage.toLowerCase().includes('threat') || currentMessage.toLowerCase().includes('alert')) {
+      aiResponse = `I'm monitoring ${alerts.length} active alerts. The critical APT detection requires immediate attention. Shall I walk you through the incident response procedure?`;
+    } else if (currentMessage.toLowerCase().includes('health') || currentMessage.toLowerCase().includes('system')) {
+      aiResponse = 'System health is at 98.5%. CPU usage is moderate at 45%, but I notice memory usage climbing to 68%. I recommend monitoring the ForecastingAgent which is consuming 82% memory.';
+    } else if (currentMessage.toLowerCase().includes('recommendation')) {
+      aiResponse = 'I recommend: 1) Patch CVE-2024-8901 immediately (CVSS 9.8), 2) Investigate the Lazarus APT indicators, 3) Update malware signatures, and 4) Review access logs for the unusual Russian login attempts.';
+    } else {
+      const responses = [
+        'I\'m analyzing the current security posture. The threat level is elevated at 75%. How can I assist you?',
+        'I\'ve detected some anomalies in the network traffic. Would you like me to investigate further?',
+        'Based on threat intelligence, there\'s increased APT activity. I can provide detailed analysis if needed.',
+        'The security metrics show room for improvement. I can suggest optimization strategies.'
+      ];
+      aiResponse = responses[Math.floor(Math.random() * responses.length)];
+    }
+    
+    const aiMessage = {
+      id: Date.now() + 1,
+      type: 'ai',
+      message: aiResponse,
+      timestamp: new Date()
+    };
+    
+    setChatMessages(prev => [...prev, aiMessage]);
+  }, 1500);
+};
+
+  const modules = [
+    { id: 'dashboard', name: 'Dashboard', icon: Shield },
+    { id: 'vulnscanner', name: 'VulnScanner', icon: Scan },
+    { id: 'malware', name: 'Malware Agent', icon: Bug },
+    { id: 'threatintel', name: 'ThreatIntel Agent', icon: Globe },
+    { id: 'response', name: 'Response Agent', icon: Play },
+    { id: 'forensic', name: 'Forensic Agent', icon: FileSearch },
+    { id: 'forecasting', name: 'Forecasting Agent', icon: TrendingUp },
+    { id: 'memory', name: 'Knowledge Base', icon: Database },
+    { id: 'settings', name: 'Settings', icon: Settings }
+  ];
+
+  const renderDashboard = () => (
+    <div className="space-y-6">
+      {/* Top Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Active Threats', value: '147', change: '+12%', color: 'red', icon: AlertTriangle },
+          { label: 'Blocked Attacks', value: '2.3K', change: '+8%', color: 'green', icon: Shield },
+          { label: 'Vulnerabilities', value: '143', change: '-5%', color: 'yellow', icon: Bug },
+          { label: 'System Health', value: '98.5%', change: '+0.2%', color: 'blue', icon: Activity }
+        ].map((stat, index) => (
+          <div
+            key={index}
+            className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">{stat.label}</p>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                <p className={`text-sm ${stat.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                  {stat.change}
+                </p>
+              </div>
+              <stat.icon className={`text-${stat.color}-400`} size={32} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Threat Level Gauge */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Target className="mr-2 text-red-400" size={20} />
+            Threat Level
+          </h3>
+          <div className="relative w-40 h-40 mx-auto">
+            <svg className="transform -rotate-90 w-40 h-40">
+              <circle cx="80" cy="80" r="70" stroke="#374151" strokeWidth="8" fill="transparent" />
+              <circle 
+                cx="80" 
+                cy="80" 
+                r="70" 
+                stroke="#ef4444" 
+                strokeWidth="8" 
+                fill="transparent"
+                strokeDasharray={`${75 * 4.4} ${100 * 4.4}`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-red-400">75%</div>
+                <div className="text-sm text-gray-400">HIGH</div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+            <div className="text-center">
+              <div className="text-red-400 font-medium">8</div>
+              <div className="text-gray-400">Critical</div>
+            </div>
+            <div className="text-center">
+              <div className="text-orange-400 font-medium">23</div>
+              <div className="text-gray-400">High</div>
+            </div>
+          </div>
+        </div>
+
+        {/* System Health */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <Activity className="mr-2 text-green-400" size={20} />
+              System Health
+            </div>
+            <button className="text-gray-400 hover:text-white transition-colors">
+              <RefreshCw size={16} />
+            </button>
+          </h3>
+          <div className="space-y-4">
+            {[
+              { label: 'CPU Usage', value: 45, color: 'green' },
+              { label: 'Memory', value: 68, color: 'yellow' },
+              { label: 'Network', value: 32, color: 'blue' },
+              { label: 'Storage', value: 78, color: 'orange' }
+            ].map((metric, index) => (
+              <div key={index}>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300">{metric.label}</span>
+                  <span className={`text-${metric.color}-400`}>{metric.value}%</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2 mt-1">
+                  <div 
+                    className={`bg-${metric.color}-400 h-2 rounded-full transition-all duration-1000`}
+                    style={{ width: `${metric.value}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Real-time Alerts */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <AlertTriangle className="mr-2 text-yellow-400" size={20} />
+              Live Alerts
+            </div>
+            <span className="text-sm bg-red-500 text-white px-2 py-1 rounded-full animate-pulse">
+              {alerts.length}
+            </span>
+          </h3>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {alerts.map((alert, index) => (
+              <div
+                key={alert.id}
+                onClick={() => setSelectedAlert(alert)}
+                className={`p-3 rounded-lg border cursor-pointer transition-all hover:scale-102 ${getAlertColor(alert.type)} shadow-lg hover:shadow-xl`}
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-medium text-white text-sm">{alert.title}</h4>
+                    <p className="text-xs text-gray-400 mt-1">{alert.source} • {alert.location}</p>
+                    <div className="flex items-center mt-2 space-x-2">
+                      <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
+                        {alert.confidence}% confidence
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-400">{alert.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Threat Timeline Chart */}
+        <div className="lg:col-span-2 bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <BarChart3 className="mr-2 text-blue-400" size={20} />
+            Threat Activity Timeline
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={threatData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="time" stroke="#9CA3AF" />
+                <YAxis stroke="#9CA3AF" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1F2937', 
+                    border: '1px solid #374151',
+                    borderRadius: '8px'
+                  }} 
+                />
+                <Area type="monotone" dataKey="threats" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
+                <Area type="monotone" dataKey="blocked" stroke="#10B981" fill="#10B981" fillOpacity={0.3} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Agent Status */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Users className="mr-2 text-purple-400" size={20} />
+            Agent Status
+          </h3>
+          <div className="space-y-3">
+            {agentStatus.map((agent, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all cursor-pointer"
+              >
+                <div className="flex items-center">
+                  {agent.status === 'online' ? <Wifi size={16} className="text-green-400 mr-2" /> : 
+                   agent.status === 'offline' ? <WifiOff size={16} className="text-red-400 mr-2" /> :
+                   <Clock size={16} className="text-yellow-400 mr-2" />}
+                  <div>
+                    <div className="font-medium text-white text-sm">{agent.name}</div>
+                    <div className="text-xs text-gray-400">Last: {agent.lastScan}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-sm font-medium ${getStatusColor(agent.status)}`}>
+                    {agent.status.toUpperCase()}
+                  </div>
+                  <div className="text-xs text-gray-400">{agent.threats} threats</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderVulnScanner = () => (
+    <div className="space-y-6">
+      {/* Search Section */}
+      <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+        <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+          <Search className="mr-2 text-blue-400" size={20} />
+          Vulnerability Scanner
+        </h3>
+        <div className="flex space-x-4">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Enter IP address, domain, or network range (e.g., 192.168.1.1)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleVulnSearch()}
+              className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-400 outline-none transition-all"
+            />
+            <Network className="absolute right-3 top-3 text-gray-400" size={20} />
+          </div>
+          <button
+            onClick={handleVulnSearch}
+            disabled={isScanning}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center transition-all"
+          >
+            {isScanning ? <Loader2 className="animate-spin mr-2" size={16} /> : <Scan className="mr-2" size={16} />}
+            {isScanning ? 'Scanning...' : 'Scan'}
+          </button>
+        </div>
+      </div>
+
+      {/* Scan Results */}
+      {scanResults.length > 0 && (
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4">Scan Results</h3>
+          {scanResults.map((result, index) => (
+            <div key={index} className="space-y-4">
+              <div className="bg-gray-700 rounded-lg p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-white font-medium">Target: {result.ip}</span>
+                  <span className="text-gray-400 text-sm">{result.last_scan}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-gray-400 text-sm">Operating System</p>
+                    <p className="text-white">{result.os}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-sm">Open Ports</p>
+                    <p className="text-white">{result.open_ports.join(', ')}</p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <p className="text-gray-400 text-sm mb-2">Vulnerabilities Found</p>
+                  <div className="space-y-2">
+                    {result.vulnerabilities.map((vuln, vIndex) => (
+                      <div key={vIndex} className={`p-3 rounded-lg ${vuln.severity === 'Critical' ? 'bg-red-500/10 border border-red-500' : 'bg-orange-500/10 border border-orange-500'}`}>
+                        <div className="flex justify-between">
+                          <span className="text-white font-medium">{vuln.cve}</span>
+                          <span className={`px-2 py-1 rounded text-xs ${vuln.severity === 'Critical' ? 'bg-red-500 text-white' : 'bg-orange-500 text-white'}`}>
+                            {vuln.severity}
+                          </span>
+                        </div>
+                        <p className="text-gray-400 text-sm">Port {vuln.port} - {vuln.service}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Vulnerability Distribution */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <BarChart3 className="mr-2 text-purple-400" size={20} />
+            Vulnerability Distribution
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={vulnData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="count"
+                  label={({severity, count}) => `${severity}: ${count}`}
+                >
+                  {vulnData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Detailed Vulnerabilities */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <AlertTriangle className="mr-2 text-red-400" size={20} />
+            Critical Vulnerabilities
+          </h3>
+          <div className="space-y-4 max-h-64 overflow-y-auto">
+            {detailedVulns.map((vuln, index) => (
+              <div key={index} className={`p-4 rounded-lg ${vuln.severity === 'Critical' ? 'bg-red-500/10 border border-red-500' : 'bg-orange-500/10 border border-orange-500'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="text-white font-medium">{vuln.id}</h4>
+                    <p className="text-gray-400 text-sm">{vuln.title}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <span className={`px-2 py-1 rounded text-xs ${vuln.severity === 'Critical' ? 'bg-red-500 text-white' : 'bg-orange-500 text-white'}`}>
+                      CVSS {vuln.cvss}
+                    </span>
+                    {vuln.exploit_available && (
+                      <span className="px-2 py-1 bg-red-600 text-white rounded text-xs">
+                        Exploit Available
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-gray-300 text-sm mb-3">{vuln.description}</p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">
+                    Affected: {vuln.affected_systems.length} systems
+                  </span>
+                  <span className={`${vuln.patch_available ? 'text-green-400' : 'text-red-400'}`}>
+                    {vuln.patch_available ? 'Patch Available' : 'No Patch'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMalwareAgent = () => (
+    <div className="space-y-6">
+      {/* File Upload Section */}
+      <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+        <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+          <Upload className="mr-2 text-green-400" size={20} />
+          Malware Scanner
+        </h3>
+        <div 
+          className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-green-400 transition-colors cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <FileText className="mx-auto mb-4 text-gray-400" size={48} />
+          <p className="text-gray-400 mb-2">Drag and drop files here or click to browse</p>
+          <p className="text-gray-500 text-sm">Supported formats: exe, dll, pdf, doc, zip, and more</p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".exe,.dll,.pdf,.doc,.docx,.zip,.rar,.js,.vbs,.bat,.cmd"
+          />
+        </div>
+      </div>
+
+      {/* Upload Results */}
+      {uploadedFiles.length > 0 && (
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4">Scan Results</h3>
+          <div className="space-y-3">
+            {uploadedFiles.map((file) => (
+              <div key={file.id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <FileText className="text-blue-400" size={20} />
+                  <div>
+                    <p className="text-white font-medium">{file.name}</p>
+                    <p className="text-gray-400 text-sm">{(file.size / 1024).toFixed(1)} KB</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  {file.status === 'scanning' ? (
+                    <div className="flex items-center space-x-2">
+                      <Loader2 className="animate-spin text-blue-400" size={16} />
+                      <span className="text-blue-400">Scanning...</span>
+                    </div>
+                  ) : file.status === 'clean' ? (
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="text-green-400" size={16} />
+                      <span className="text-green-400">Clean</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <XCircle className="text-red-400" size={16} />
+                      <div className="text-right">
+                        <span className="text-red-400 block">Infected</span>
+                        <span className="text-red-300 text-xs">{file.threat}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Malware Statistics */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Bug className="mr-2 text-red-400" size={20} />
+            Malware Statistics
+          </h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-gray-700 rounded-lg">
+                <div className="text-2xl font-bold text-red-400">127</div>
+                <div className="text-gray-400 text-sm">Detected Today</div>
+              </div>
+              <div className="text-center p-4 bg-gray-700 rounded-lg">
+                <div className="text-2xl font-bold text-green-400">2.8K</div>
+                <div className="text-gray-400 text-sm">Blocked Total</div>
+              </div>
+            </div>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[
+                  { type: 'Trojan', count: 45 },
+                  { type: 'Ransomware', count: 23 },
+                  { type: 'Adware', count: 31 },
+                  { type: 'Spyware', count: 18 },
+                  { type: 'Rootkit', count: 10 }
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="type" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px'
+                    }} 
+                  />
+                  <Bar dataKey="count" fill="#ef4444" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Threats */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <AlertTriangle className="mr-2 text-yellow-400" size={20} />
+            Recent Threats
+          </h3>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {[
+              { name: 'Trojan.Win32.Agent.xyz', source: 'email_attachment.exe', time: '2 min ago', severity: 'High' },
+              { name: 'Ransomware.Ryuk', source: 'document.docm', time: '5 min ago', severity: 'Critical' },
+              { name: 'Adware.Generic', source: 'installer.exe', time: '8 min ago', severity: 'Medium' },
+              { name: 'Spyware.Keylogger', source: 'update.zip', time: '12 min ago', severity: 'High' }
+            ].map((threat, index) => (
+              <div key={index} className="p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="text-white font-medium text-sm">{threat.name}</h4>
+                    <p className="text-gray-400 text-xs">{threat.source}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      threat.severity === 'Critical' ? 'bg-red-500 text-white' :
+                      threat.severity === 'High' ? 'bg-orange-500 text-white' :
+                      'bg-yellow-500 text-black'
+                    }`}>
+                      {threat.severity}
+                    </span>
+                    <p className="text-gray-400 text-xs mt-1">{threat.time}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderThreatIntel = () => (
+    <div className="space-y-6">
+      {/* Threat Intelligence Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">IOCs Collected</p>
+              <p className="text-2xl font-bold text-white">1,247</p>
+              <p className="text-green-400 text-sm">+23 today</p>
+            </div>
+            <Hash className="text-blue-400" size={32} />
+          </div>
+        </div>
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Threat Actors</p>
+              <p className="text-2xl font-bold text-white">87</p>
+              <p className="text-yellow-400 text-sm">3 new</p>
+            </div>
+            <Users className="text-red-400" size={32} />
+          </div>
+        </div>
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Campaigns</p>
+              <p className="text-2xl font-bold text-white">34</p>
+              <p className="text-red-400 text-sm">2 active</p>
+            </div>
+            <Target className="text-purple-400" size={32} />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Geographic Threat Map */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Globe className="mr-2 text-green-400" size={20} />
+            Geographic Threat Distribution
+          </h3>
+          <div className="h-64 bg-gray-700 rounded-lg flex items-center justify-center">
+            <div className="text-center">
+              <MapPin className="mx-auto mb-2 text-gray-400" size={32} />
+              <p className="text-gray-400">Interactive threat map</p>
+              <p className="text-gray-500 text-sm">Shows real-time global threat activity</p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+            <div className="text-center">
+              <div className="text-red-400 font-medium">Russia</div>
+              <div className="text-gray-400">847 threats</div>
+            </div>
+            <div className="text-center">
+              <div className="text-orange-400 font-medium">China</div>
+              <div className="text-gray-400">623 threats</div>
+            </div>
+            <div className="text-center">
+              <div className="text-yellow-400 font-medium">N. Korea</div>
+              <div className="text-gray-400">234 threats</div>
+            </div>
+          </div>
+        </div>
+
+        {/* APT Groups */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Users className="mr-2 text-red-400" size={20} />
+            Active APT Groups
+          </h3>
+          <div className="space-y-3">
+            {[
+              { name: 'Lazarus Group', origin: 'North Korea', activity: 'High', targets: 'Financial, Crypto', lastSeen: '2 days ago' },
+              { name: 'APT29 (Cozy Bear)', origin: 'Russia', activity: 'Medium', targets: 'Government, Healthcare', lastSeen: '1 week ago' },
+              { name: 'APT1 (Comment Crew)', origin: 'China', activity: 'Low', targets: 'Industrial, Tech', lastSeen: '2 weeks ago' }
+            ].map((group, index) => (
+              <div key={index} className="p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-white font-medium">{group.name}</h4>
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    group.activity === 'High' ? 'bg-red-500 text-white' :
+                    group.activity === 'Medium' ? 'bg-yellow-500 text-black' :
+                    'bg-green-500 text-white'
+                  }`}>
+                    {group.activity}
+                  </span>
+                </div>
+                <div className="text-sm space-y-1">
+                  <p className="text-gray-400">Origin: <span className="text-white">{group.origin}</span></p>
+                  <p className="text-gray-400">Targets: <span className="text-white">{group.targets}</span></p>
+                  <p className="text-gray-400">Last Seen: <span className="text-white">{group.lastSeen}</span></p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderForecasting = () => (
+    <div className="space-y-6">
+      {/* Threat Forecast */}
+      <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+        <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+          <TrendingUp className="mr-2 text-green-400" size={20} />
+          7-Day Threat Forecast
+        </h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart data={forecastData}>
+              <PolarGrid stroke="#374151" />
+              <PolarAngleAxis dataKey="category" tick={{ fill: '#9CA3AF', fontSize: 12 }} />
+              <PolarRadiusAxis tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+              <Radar name="Current" dataKey="current" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
+              <Radar name="Predicted" dataKey="predicted" stroke="#EF4444" fill="#EF4444" fillOpacity={0.2} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#1F2937', 
+                  border: '1px solid #374151',
+                  borderRadius: '8px'
+                }} 
+              />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* AI Predictions */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Brain className="mr-2 text-purple-400" size={20} />
+            AI Predictions
+          </h3>
+          <div className="space-y-4">
+            {[
+              { prediction: 'Ransomware attacks expected to increase by 23% next week', confidence: 87, trend: 'up' },
+              { prediction: 'DDoS activity likely to decrease following recent takedowns', confidence: 76, trend: 'down' },
+              { prediction: 'New phishing campaign targeting healthcare sector predicted', confidence: 92, trend: 'up' },
+              { prediction: 'Cryptocurrency-related malware infections may spike', confidence: 68, trend: 'up' }
+            ].map((item, index) => (
+              <div key={index} className="p-4 bg-gray-700 rounded-lg">
+                <div className="flex items-start justify-between mb-2">
+                  <p className="text-white text-sm flex-1">{item.prediction}</p>
+                  <TrendingUp className={`ml-2 ${item.trend === 'up' ? 'text-red-400' : 'text-green-400'} ${item.trend === 'down' ? 'rotate-180' : ''}`} size={16} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-xs">Confidence: {item.confidence}%</span>
+                  <div className="w-20 bg-gray-600 rounded-full h-2">
+                    <div 
+                      className="bg-purple-400 h-2 rounded-full transition-all duration-1000"
+                      style={{ width: `${item.confidence}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Risk Assessment */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Shield className="mr-2 text-yellow-400" size={20} />
+            Risk Assessment
+          </h3>
+          <div className="space-y-4">
+            {[
+              { category: 'External Threats', level: 'High', score: 78, color: 'red' },
+              { category: 'Insider Threats', level: 'Medium', score: 45, color: 'yellow' },
+              { category: 'System Vulnerabilities', level: 'High', score: 67, color: 'orange' },
+              { category: 'Data Exposure', level: 'Low', score: 23, color: 'green' }
+            ].map((risk, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div>
+                  <p className="text-white font-medium">{risk.category}</p>
+                  <p className={`text-${risk.color}-400 text-sm`}>{risk.level} Risk</p>
+                </div>
+                <div className="text-right">
+                  <div className={`text-${risk.color}-400 font-bold`}>{risk.score}</div>
+                  <div className="w-16 bg-gray-600 rounded-full h-2 mt-1">
+                    <div 
+                      className={`bg-${risk.color}-400 h-2 rounded-full transition-all duration-1000`}
+                      style={{ width: `${risk.score}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderKnowledgeBase = () => (
+    <div className="space-y-6">
+      {/* Knowledge Base Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {knowledgeBase.map((kb, index) => (
+          <div key={index} className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <Database className="text-blue-400" size={24} />
+              <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">{kb.type}</span>
+            </div>
+            <h3 className="text-white font-medium mb-1">{kb.title}</h3>
+            <p className="text-2xl font-bold text-blue-400">{kb.entries.toLocaleString()}</p>
+            <p className="text-gray-400 text-xs">Updated {kb.lastUpdate}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Search Knowledge Base */}
+      <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+        <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+          <Search className="mr-2 text-green-400" size={20} />
+          Search Knowledge Base
+        </h3>
+        <div className="flex space-x-4 mb-6">
+          <input
+            type="text"
+            placeholder="Search IOCs, CVEs, signatures..."
+            className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none"
+          />
+          <button className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center">
+            <Search className="mr-2" size={16} />
+            Search
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-white font-medium mb-3">Recent Additions</h4>
+            <div className="space-y-2">
+              {[
+                { type: 'IOC', value: 'c2.malicious-domain.com', added: '2 hours ago' },
+                { type: 'Hash', value: 'a1b2c3d4e5f6...', added: '4 hours ago' },
+                { type: 'CVE', value: 'CVE-2024-8903', added: '6 hours ago' }
+              ].map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 bg-gray-700 rounded">
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      item.type === 'IOC' ? 'bg-red-500 text-white' :
+                      item.type === 'Hash' ? 'bg-blue-500 text-white' :
+                      'bg-yellow-500 text-black'
+                    }`}>
+                      {item.type}
+                    </span>
+                    <span className="text-white text-sm">{item.value}</span>
+                  </div>
+                  <span className="text-gray-400 text-xs">{item.added}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-white font-medium mb-3">Popular Searches</h4>
+            <div className="space-y-2">
+              {[
+                'Lazarus Group TTPs',
+                'REvil Ransomware IOCs',
+                'Log4j Vulnerabilities',
+                'APT29 Campaigns'
+              ].map((search, index) => (
+                <button
+                  key={index}
+                  className="block w-full text-left p-2 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                >
+                  <span className="text-white text-sm">{search}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Chat Component
+  const renderChat = () => (
+    <div className={`fixed ${floatingChat ? 'bottom-4 right-4 w-96' : 'inset-0'} bg-gray-800 ${floatingChat ? 'rounded-2xl shadow-2xl border border-gray-700' : ''} ${chatMinimized && floatingChat ? 'h-14' : floatingChat ? 'h-96' : 'h-full'} transition-all z-50`}>
+      <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center space-x-2">
+          <Bot className="text-blue-400" size={20} />
+          <span className="text-white font-medium">AI Security Assistant</span>
+        </div>
+        <div className="flex space-x-2">
+          {floatingChat && (
+            <button
+              onClick={() => setChatMinimized(!chatMinimized)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              {chatMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
+            </button>
+          )}
+          <button
+            onClick={() => setChatOpen(false)}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      </div>
+      
+      {!chatMinimized && (
+        <>
+          <div className="flex-1 p-4 overflow-y-auto max-h-64">
+            <div className="space-y-4">
+              {chatMessages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-xs px-4 py-2 rounded-lg ${
+                    msg.type === 'user' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-700 text-white'
+                  }`}>
+                    <p className="text-sm">{msg.message}</p>
+                    <p className="text-xs opacity-70 mt-1">
+                      {msg.timestamp.toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="p-4 border-t border-gray-700">
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                placeholder="Ask about threats, vulnerabilities..."
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleChatMessage()}
+                className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-400 outline-none text-sm"
+              />
+              <button
+                onClick={handleChatMessage}
+                className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+              >
+                <Send size={16} />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const renderModule = () => {
+    switch (activeModule) {
+      case 'dashboard': return renderDashboard();
+      case 'vulnscanner': return renderVulnScanner();
+      case 'malware': return renderMalwareAgent();
+      case 'threatintel': return renderThreatIntel();
+      case 'forecasting': return renderForecasting();
+      case 'memory': return renderKnowledgeBase();
+      case 'response':
+      case 'forensic':
+      case 'settings':
+      default:
+        return (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🚧</div>
+              <h3 className="text-xl font-semibold text-white mb-2">Module Under Development</h3>
+              <p className="text-gray-400">This module is currently being developed and will be available soon.</p>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Shield className="text-blue-400" size={32} />
+            <div>
+              <h1 className="text-2xl font-bold">SentinelNexus</h1>
+              <p className="text-gray-400 text-sm">Advanced Cybersecurity Platform</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-300">
+              {currentTime.toLocaleString()}
+            </div>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="p-2 text-gray-400 hover:text-white transition-colors"
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <button
+                onClick={() => setHoveringChatOpen(true)}
+              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <MessageSquare size={20} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 bg-gray-800 border-r border-gray-700 min-h-screen">
+          <nav className="p-4">
+            <div className="space-y-2">
+              {modules.map((module) => {
+                const Icon = module.icon;
+                return (
+                  <button
+                    key={module.id}
+                    onClick={() => setActiveModule(module.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      activeModule === module.id
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`}
+                  >
+                    <Icon size={20} />
+                    <span>{module.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 p-6">
+          {renderModule()}
+        </main>
+      </div>
+
+      {/* Chat Component */}
+      {chatOpen && renderChat()}
+
+      {/* Hovering Chat Box */}
+      <HoveringChatBox
+      isOpen={hoveringChatOpen}
+      onToggle={() => setHoveringChatOpen(!hoveringChatOpen)}
+      messages={chatMessages}
+      currentMessage={currentMessage}
+      setCurrentMessage={setCurrentMessage}
+      onSendMessage={handleChatMessage}
+      activeModule={activeModule}
+      />
+
+
+      {/* Alert Modal */}
+      {selectedAlert && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-2xl p-6 max-w-2xl w-full mx-4 border border-gray-700 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white flex items-center">
+                <AlertTriangle className="mr-2 text-red-400" size={24} />
+                Alert Details
+              </h2>
+              <button
+                onClick={() => setSelectedAlert(null)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className={`p-4 rounded-lg border ${getAlertColor(selectedAlert.type)}`}>
+                <h3 className="text-white font-semibold mb-2">{selectedAlert.title}</h3>
+                <p className="text-gray-300 mb-3">{selectedAlert.details}</p>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-400">Source:</span>
+                    <span className="text-white ml-2">{selectedAlert.source}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Location:</span>
+                    <span className="text-white ml-2">{selectedAlert.location}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Affected Systems:</span>
+                    <span className="text-white ml-2">{selectedAlert.affected_systems}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Confidence:</span>
+                    <span className="text-white ml-2">{selectedAlert.confidence}%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                  Escalate
+                </button>
+                <button className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
+                  Investigate
+                </button>
+                <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                  Mark as Resolved
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SentinelNexusDashboard;
